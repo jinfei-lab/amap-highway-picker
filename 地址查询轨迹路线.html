@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <script type="text/javascript">
+      window._AMapSecurityConfig = {
+        securityJsCode: "b964ccbd98867d4e71fe87d3769bb9d5",
+      };
+    </script>
+    <script src="https://webapi.amap.com/maps?v=2.0&key=7c6bc75bf40b761c056521cc4434f6cd&plugin=AMap.GeoJSON,AMap.Geocoder"></script>
+    <script src="https://webapi.amap.com/loca?v=2.0.0&key=7c6bc75bf40b761c056521cc4434f6cd"></script>
+    <script src="//webapi.amap.com/ui/1.1/main.js"></script>
+    <script src="./convert_geo.js"></script>
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+    <link rel="stylesheet" href="https://cache.amap.com/lbs/static/main1119.css" />
+    <link rel="stylesheet" href="https://cache.amap.com/lbs/static/AMap.PlaceSearchRender1120.css" />
+
+    <style>
+      html,
+      body,
+      #map {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      .amap-logo {
+        display: none !important;
+      }
+
+      .amap-copyright {
+        display: none !important;
+      }
+
+      .custom-input-card {
+        width: 18rem;
+      }
+
+      .custom-input-card .btn:last-child {
+        margin-left: 1rem;
+      }
+
+      .content-window-card {
+        position: relative;
+        width: 23rem;
+        padding: 0.75rem 0 0 1.25rem;
+        box-shadow: none;
+        bottom: 0;
+        left: 0;
+      }
+
+      .content-window-card p {
+        height: 2rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <script>
+      let map = new AMap.Map("map", {
+        zoom: 8,
+        center: [117.227267, 31.420567],
+        // showLabel: false,
+        mapStyle: "amap://styles/8694fc8103d0cbe15eb70b8308cd4171",
+        viewMode: "3D",
+        pitch: 50,
+        fitView: true,
+        labelzIndex: 111,
+      });
+
+      var distProvince = new AMap.DistrictLayer.Province({
+        zIndex: 10, //设置图层层级
+        zooms: [2, 15], //设置图层显示范围
+        adcode: "340000", //设置行政区 adcode
+        depth: 0, //设置数据显示层级，0：显示国家面，1：显示省级，当国家为中国时设置depth为2的可以显示市一级
+      });
+
+      // 设置行政区图层样式
+      distProvince.setStyles({
+        "stroke-width": 2, //描边线宽
+        "province-stroke": "#ff714d", //描边颜色
+        fill: function (data) {
+          //设置区域填充颜色，可根据回调信息返回区域信息设置不同填充色
+          //回调返回区域信息数据，字段包括 SOC(国家代码)、NAME_ENG(英文名称)、NAME_CHN(中文名称)等
+          //国家代码名称说明参考 https://a.amap.com/jsapi_demos/static/demo-center/js/soc-list.json
+          return "rgba(0,0,0,0.3)";
+        },
+      });
+      map.add(distProvince);
+
+      var gps = [116.736087, 32.4950615]; //需要转换的gps类型的坐标
+      //参数说明：需要转换的坐标，需要转换的坐标类型，转换成功后的回调函数
+      AMap.convertFrom(gps, "gps", function (status, result) {
+        //status：complete 表示查询成功，no_data 为查询无结果，error 代表查询错误
+        //查询成功时，result.locations 即为转换后的高德坐标系
+        if (status === "complete" && result.info === "ok") {
+          var lnglats = result.locations; //转换后的高德坐标 Array.<LngLat>
+          console.log(lnglats);
+        }
+      });
+
+      // 加载收费站
+      fetch("./toll_booth.geojson")
+        .then((response) => {
+          return response.json();
+        })
+        .then((geoJSON) => {
+          let geojson = new AMap.GeoJSON({
+            geoJSON: geoJSON,
+            getMarker: function (geojson, lnglats) {
+              let marker = new AMap.Marker({
+                position: lnglats,
+                title: geojson.properties.name,
+                extData: geojson.properties,
+              });
+              marker.on("click", function (e) {
+                console.log("click", this.getExtData());
+              });
+              return marker;
+            },
+          });
+          // 添加geojson图层
+          map.add(geojson);
+        });
+
+      // 加载服务区
+      fetch("./services.geojson")
+        .then((response) => {
+          return response.json();
+        })
+        .then((geoJSON) => {
+          let geojson = new AMap.GeoJSON({
+            geoJSON: geoJSON,
+            getPolygon: function (geojson, lnglats) {
+              let polygon = new AMap.Polygon({
+                path: lnglats,
+                strokeColor: "#FF33FF",
+                strokeWeight: 6,
+                strokeOpacity: 0.2,
+                fillOpacity: 0.4,
+                fillColor: "#1791fc",
+                zIndex: 50,
+                extData: geojson.properties,
+              });
+              polygon.on("click", function (e) {
+                console.log("click", this.getExtData());
+              });
+              return polygon;
+            },
+            getMarker: function (geojson, lnglats) {
+              return [];
+            },
+          });
+          // 添加geojson图层
+          map.add(geojson);
+        });
+
+      map.on("click", function (ev) {
+        // 点击位置确定道路
+        fetch(
+          `https://restapi.amap.com/v3/geocode/regeo?key=d51db5f96545ea96c0ff839ab5002ebd&location=${ev.lnglat.lng},${ev.lnglat.lat}&poitype=&radius=100&extensions=all&roadlevel=0`
+        )
+          .then((response) => {
+            return response.json();
+          })
+          .then((data) => {
+            if (data.status == "1") {
+              if (data.regeocode.roads.length) {
+                let road = data.regeocode.roads[0];
+                console.log("道路信息:", road);
+                if (road.name.includes("高速")) {
+                  map.clearMap();
+
+                  // 过滤高速编号
+                  const regex = /[A-Z]\d+(?=[\u4e00-\u9fa5]+高速)/; // 匹配一个大写字母后跟一个或多个数字，但要求其后必须紧跟着中文字符和"高速"字符
+                  const result = road.name.match(regex);
+                  console.log("匹配到的高速编号:", result[0]);
+
+                  if (result) {
+                    // 加载高速geojson
+                    fetch("./highway.geojson")
+                      .then((response) => {
+                        return response.json();
+                      })
+                      .then((geoJSON) => {
+                        // 匹配高速编号并且是LineString的要素后添加到相应的数组
+                        const desiredHighways = [];
+                        for (let i = 0; i < geoJSON.features.length; i++) {
+                          if (geoJSON.features[i].properties.ref) {
+                            let wayRefs = geoJSON.features[i].properties.ref.split(";");
+                            for (let j = 0; j < wayRefs.length; j++) {
+                              if (wayRefs[j] == result[0] && geoJSON.features[i].geometry.type == "LineString") {
+                                // console.log(wayRefs[j]);
+                                desiredHighways.push(geoJSON.features[i]);
+                              }
+                            }
+                          }
+                        }
+
+                        // 添加高亮线
+                        for (let i = 0; i < desiredHighways.length; i++) {
+                          //创建 Polyline 实例
+                          let polyline = new AMap.Polyline({
+                            path: desiredHighways[i].geometry.coordinates,
+                            isOutline: false,
+                            outlineColor: "#ffeeff",
+                            borderWeight: 2,
+                            strokeColor: "#1677ff",
+                            strokeOpacity: 1,
+                            strokeWeight: 3,
+                            // 折线样式还支持 'dashed'
+                            strokeStyle: "solid",
+                            // strokeStyle是dashed时有效
+                            // strokeDasharray: [10, 5],
+                            lineJoin: "round",
+                            lineCap: "round",
+                          });
+                          map.add(polyline);
+                        }
+                      });
+                  } else {
+                    console.log("未找到匹配的高速编号");
+                  }
+
+                  // 加载makerUi
+                  AMapUI.loadUI(["overlay/SimpleMarker"], function (SimpleMarker) {
+                    // 查询枢纽
+                    fetch(
+                      `https://restapi.amap.com/v3/place/text?key=d51db5f96545ea96c0ff839ab5002ebd&keywords=${road.name}枢纽&types=&city=安徽省&children=1&offset=999&page=1&extensions=all`
+                    )
+                      .then((response) => {
+                        return response.json();
+                      })
+                      .then((ret) => {
+                        let pois = ret.pois;
+                        let obj = {};
+                        let reduce = [];
+                        reduce = pois.reduce(function (item, next) {
+                          //item为没有重复id的数组，next为当前对象
+                          obj[next.name] ? "" : (obj[next.name] = true && item.push(next));
+                          return item;
+                        }, []);
+                        // console.log("枢纽:", reduce);
+                        for (let i = 0; i < reduce.length; i++) {
+                          let poi = reduce[i];
+                          let marker = [];
+
+                          //创建SimpleMarker实例
+                          marker[i] = new SimpleMarker({
+                            //前景文字
+                            iconLabel: "枢",
+                            //图标主题
+                            iconTheme: "fresh",
+                            //背景图标样式
+                            iconStyle: "lightyellow",
+                            map: map,
+                            position: [poi.location.split(",")[0], poi.location.split(",")[1]],
+                            title: poi.name,
+                          });
+                          marker[i].info = poi;
+                          marker[i].on("click", markerClick);
+                          // 将创建的点标记添加到已有的地图实例：
+                          map.add(marker[i]);
+                        }
+                      });
+
+                    // 查询服务区
+                    fetch(
+                      `https://restapi.amap.com/v3/place/text?key=d51db5f96545ea96c0ff839ab5002ebd&keywords=${road.name}服务区&types=&city=安徽省&children=1&offset=999&page=1&extensions=all`
+                      // `https://restapi.amap.com/v5/place/text?keywords=${road.name}服务区&page_size=999&key=d51db5f96545ea96c0ff839ab5002ebd`
+                    )
+                      .then((response) => {
+                        return response.json();
+                      })
+                      .then((ret) => {
+                        let pois = ret.pois.filter((item) => !item.type.includes("路口名"));
+                        console.log("服务区:", pois);
+
+                        for (let i = 0; i < pois.length; i++) {
+                          let poi = pois[i];
+                          let marker = [];
+
+                          //创建SimpleMarker实例
+                          marker[i] = new SimpleMarker({
+                            //前景文字
+                            iconLabel: "服",
+                            //图标主题
+                            iconTheme: "fresh",
+                            //背景图标样式
+                            iconStyle: "orchid",
+                            //...其他Marker选项...，不包括content
+                            map: map,
+                            position: [poi.location.split(",")[0], poi.location.split(",")[1]],
+                            title: poi.name,
+                          });
+                          marker[i].info = poi;
+                          marker[i].on("click", markerClick);
+                          // 将创建的点标记添加到已有的地图实例：
+                          map.add(marker[i]);
+                        }
+                      });
+                  });
+                }
+              }
+            }
+          });
+      });
+      // 信息窗体
+      let infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -40) });
+      function markerClick(e) {
+        //构建信息窗体中显示的内容
+        let info = [];
+        info.push(`<div style="padding:7px 0px 0px 0px;"><h4>${e.target.info.name}</h4>`);
+        info.push("<hr />");
+        info.push(`<p class='input-item'>地址 :${e.target.info.address}</p></div></div>`);
+        infoWindow.setContent(info.join(""));
+        infoWindow.open(map, e.target.getPosition());
+      }
+    </script>
+  </body>
+</html>

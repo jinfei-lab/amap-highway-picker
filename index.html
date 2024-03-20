@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title></title>
+  <script type="text/javascript">
+    window._AMapSecurityConfig = {
+      securityJsCode: 'b964ccbd98867d4e71fe87d3769bb9d5',
+    }
+  </script>
+  <script src="https://webapi.amap.com/maps?v=2.0&key=7c6bc75bf40b761c056521cc4434f6cd&plugin=AMap.GeoJSON,AMap.Geocoder,AMap.PlaceSearch"></script>
+  <script src="https://webapi.amap.com/loca?v=2.0.0&key=7c6bc75bf40b761c056521cc4434f6cd"></script>
+  <script src="//webapi.amap.com/ui/1.1/main.js"></script>
+  <script src="./convert_geo.js"></script>
+  <script src="./services.js"></script>
+  <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css"/>
+  <link rel="stylesheet" href="https://cache.amap.com/lbs/static/main1119.css"/>
+  <link rel="stylesheet" href="https://cache.amap.com/lbs/static/AMap.PlaceSearchRender1120.css"/>
+
+  <style>
+    html,
+    body,
+    #map {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .amap-logo {
+      display: none !important;
+    }
+
+    .amap-copyright {
+      display: none !important;
+    }
+
+    .custom-input-card {
+      width: 18rem;
+    }
+
+    .custom-input-card .btn:last-child {
+      margin-left: 1rem;
+    }
+
+    .content-window-card {
+      position: relative;
+      width: 23rem;
+      padding: 0.75rem 0 0 1.25rem;
+      box-shadow: none;
+      bottom: 0;
+      left: 0;
+    }
+
+    .content-window-card p {
+      height: 2rem;
+    }
+  </style>
+</head>
+
+<body>
+<div id="map"></div>
+<script>
+  let map = new AMap.Map('map', {
+    zoom: 8,
+    center: [117.227267, 31.420567],
+    mapStyle: 'amap://styles/8694fc8103d0cbe15eb70b8308cd4171',
+    viewMode: '3D',
+    pitch: 50,
+    fitView: true,
+    labelzIndex: 111,
+  })
+
+  var distProvince = new AMap.DistrictLayer.Province({
+    zIndex: 10, //设置图层层级
+    zooms: [2, 15], //设置图层显示范围
+    adcode: '340000', //设置行政区 adcode
+    depth: 0, //设置数据显示层级，0：显示国家面，1：显示省级，当国家为中国时设置depth为2的可以显示市一级
+  })
+
+  // 设置行政区图层样式
+  distProvince.setStyles({
+    'stroke-width': 2, //描边线宽
+    'province-stroke': '#ff714d', //描边颜色
+    fill: 'rgba(0,0,0,0.3)',
+  })
+  map.add(distProvince)
+
+  var geocoder = new AMap.Geocoder({
+    city: '340000', //设为安徽，默认：“全国”
+    radius: 1000, //范围，默认：500
+  })
+
+  // 加载服务区
+  // fetch('./services.geojson').then((response) => {
+  //   return response.json()
+  // }).then((data) => {
+  //   console.log(data)
+  //   let geojson = new AMap.GeoJSON({
+  //     geoJSON: data,
+  //     getPolygon: function (json, lnglats) {
+  //       let polygon = new AMap.Polygon({
+  //         path: lnglats,
+  //         strokeColor: '#ffd666',
+  //         strokeWeight: 6,
+  //         strokeOpacity: 0.4,
+  //         fillOpacity: 0.4,
+  //         fillColor: '#95de64',
+  //         zIndex: 50,
+  //         extData: json.properties,
+  //       })
+  //       polygon.on('click', function (e) {
+  //         console.log('click', this.getExtData())
+  //         polygonClick(e, this.getExtData())
+  //       })
+  //       return polygon
+  //     },
+  //     getMarker: function (geojson, lnglats) {
+  //       return []
+  //     },
+  //   })
+  //   // 添加geojson图层
+  //   map.add(geojson)
+  // })
+
+  // for (let i = 0; i < highway_services.length; i++) {
+  //   console.log(highway_services[i].poiList.pois)
+  //   for (let j = 0; j < highway_services[i].poiList.pois.length; j++) {
+  //     let marker = new AMap.Marker({
+  //       position: highway_services[i].poiList.pois[j].location,
+  //       info: {
+  //         name: highway_services[i].poiList.pois[j].name,
+  //         address: highway_services[i].poiList.pois[j].address,
+  //       },
+  //     })
+  //     marker.on('click', function (e) {
+  //       markerClick(e, {
+  //         name: highway_services[i].poiList.pois[j].name,
+  //         address: highway_services[i].poiList.pois[j].address,
+  //       })
+  //     })
+  //     map.add(marker)
+  //   }
+  // }
+  // let list = [];
+  // for (let i = 0; i < 20; i++) {
+  //   let MSearch = new AMap.PlaceSearch({
+  //     //设置PlaceSearch属性
+  //     city: "340000", //城市
+  //     citylimit: true,
+  //     type: "180300", //数据类别
+  //     // pageSize: 999, //每页结果数,默认10
+  //     pageIndex: i + 1, //请求页码，默认1
+  //     extensions: "base", //返回信息详略，默认为base（基本信息）
+  //   }); //构造PlaceSearch类
+  //   MSearch.search("", function (status, result) {
+  //     //查询成功时，result 即对应匹配的 POI 信息
+  //     list.push(result);
+  //     console.log(list);
+  //   }); //关键字查询
+  // }
+
+  map.on('click', function (ev) {
+    // 点击位置确定道路
+    geocoder.getAddress([ev.lnglat.lng, ev.lnglat.lat], function (status, res) {
+      if (status === 'complete' && res.regeocode) {
+        console.log('道路信息:', res.regeocode.formattedAddress)
+        if (res.regeocode.formattedAddress.includes('高速')) {
+          // 过滤高速编号
+          const regex = /[A-Z]\d+(?=[\u4e00-\u9fa5]+高速)/ // 匹配一个大写字母后跟一个或多个数字，但要求其后必须紧跟着中文字符和"高速"字符
+          const result = res.regeocode.formattedAddress.match(regex)
+
+          // 匹配高速名称
+          const highwayRegex = /([\u4e00-\u9fa5]+)(高速)/
+          const match = res.regeocode.formattedAddress.match(highwayRegex)
+          const highwayName = match[1] + match[2]
+          console.log('匹配到的高速名称:', highwayName)
+
+          if (result) {
+            console.log('匹配到的高速编号:', result[0])
+            map.clearMap()
+            // 加载高速geojson
+            fetch('./highway.geojson').then((response) => {
+              return response.json()
+            }).then((geoJSON) => {
+              // 匹配高速编号并且是LineString的要素后添加到相应的数组
+              const desiredHighways = []
+              for (let i = 0; i < geoJSON.features.length; i++) {
+                if (geoJSON.features[i].properties.ref) {
+                  let wayRefs = geoJSON.features[i].properties.ref.split(';')
+                  for (let j = 0; j < wayRefs.length; j++) {
+                    if (wayRefs[j] == result[0] && geoJSON.features[i].geometry.type == 'LineString') {
+                      // console.log(wayRefs[j]);
+                      desiredHighways.push(geoJSON.features[i])
+                    }
+                  }
+                }
+              }
+
+              // 添加高亮线
+              for (let i = 0; i < desiredHighways.length; i++) {
+                //创建 Polyline 实例
+                let polyline = new AMap.Polyline({
+                  path: desiredHighways[i].geometry.coordinates,
+                  isOutline: false,
+                  outlineColor: '#ffeeff',
+                  borderWeight: 2,
+                  strokeColor: '#1677ff',
+                  strokeOpacity: 1,
+                  strokeWeight: 3,
+                  // 折线样式还支持 'dashed'
+                  strokeStyle: 'solid',
+                  // strokeStyle是dashed时有效
+                  // strokeDasharray: [10, 5],
+                  zIndex: 49,
+                  lineJoin: 'round',
+                  lineCap: 'round',
+                })
+                map.add(polyline)
+              }
+            })
+
+            // 加载高速服务区
+            fetch('./services.geojson').then((response) => {
+              return response.json()
+            }).then((geoJSON) => {
+              let geojson = new AMap.GeoJSON({
+                geoJSON: geoJSON,
+                getPolygon: function (json, lnglats) {
+                  if (json.properties.extraData.formattedAddress.includes(highwayName)) {
+                    let polygon = new AMap.Polygon({
+                      path: lnglats,
+                      strokeColor: '#ffd666',
+                      strokeWeight: 6,
+                      strokeOpacity: 0.4,
+                      fillOpacity: 0.4,
+                      fillColor: '#95de64',
+                      zIndex: 50,
+                      extData: json.properties,
+                    })
+                    polygon.on('click', function (e) {
+                      console.log('click', this.getExtData())
+                      polygonClick(e, this.getExtData())
+                    })
+                    return polygon
+                  } else {
+                    return []
+                  }
+                },
+                // getPolygon: function () {
+                //   return [];
+                // },
+                getMarker: function (geojson, lnglats) {
+                  return []
+                },
+              })
+              // 添加geojson图层
+              map.add(geojson)
+            })
+          } else {
+            console.log('未找到匹配的高速编号')
+          }
+        }
+      } else {
+        log.error('根据经纬度查询地址失败')
+      }
+    })
+  })
+  // 信息窗体
+  let infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -40) })
+
+  function markerClick (e, data) {
+    //构建信息窗体中显示的内容
+    let info = []
+    info.push(`<div style="padding:7px 0px 0px 0px;"><h4>${data.name}</h4>`)
+    info.push('<hr />')
+    info.push(`<p class="input-item">地址 :${data.address}</p></div></div>`)
+    infoWindow.setContent(info.join(''))
+    infoWindow.open(map, e.target.getPosition())
+  }
+
+  function polygonClick (e, data) {
+    //构建信息窗体中显示的内容
+    let info = []
+    info.push(`<div style="padding:7px 0px 0px 0px;"><h4>${data.extraData.formattedAddress}</h4>`)
+    info.push('<hr />')
+    info.push(
+      `<p class="input-item">地址 :${
+        data.extraData.addressComponent.province +
+        data.extraData.addressComponent.city +
+        data.extraData.addressComponent.district +
+        data.extraData.addressComponent.township
+      }</p></div></div>`,
+    )
+    infoWindow.setContent(info.join(''))
+    infoWindow.open(map, e.lnglat)
+  }
+</script>
+</body>
+</html>
