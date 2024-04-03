@@ -14,11 +14,23 @@
     <!-- <script src="https://webapi.amap.com/maps?v=2.0&key=6f025e700cbacbb0bb866712d20bb35c&plugin=AMap.GeoJSON,AMap.Geocoder,AMap.PlaceSearch"></script> -->
     <!-- <script src="https://webapi.amap.com/loca?v=2.0.0&key=7c6bc75bf40b761c056521cc4434f6cd"></script> -->
     <script src="//webapi.amap.com/ui/1.1/main.js"></script>
-    <script src="./convert_geo.js"></script>
+    <!-- 服务区geojson -->
     <script src="./services.js"></script>
-    <script src="./highway_services.js"></script>
+    <!-- 高速公路geojson -->
     <script src="./highway.js"></script>
-    <script src="./amap_toll_both.js"></script>
+    <!-- 收费站geojson -->
+    <script src="./toll_booth.js"></script>
+    <!-- 互通枢纽geojson -->
+    <script src="./junction.js"></script>
+    <script src="./amap_junction.js"></script>
+    <!-- 高速桥 -->
+    <!-- <script src="./bridge.js"></script> -->
+    <script src="./bridge_data.js"></script>
+    <!-- 枢纽 -->
+    <script src="./transportation_hub.js"></script>
+
+    <script src="./convert_geo.js"></script>
+    <!-- <script src="./amap_toll_both.js"></script> -->
     <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
     <link rel="stylesheet" href="https://cache.amap.com/lbs/static/main1119.css" />
     <link rel="stylesheet" href="https://cache.amap.com/lbs/static/AMap.PlaceSearchRender1120.css" />
@@ -41,14 +53,6 @@
         display: none !important;
       }
 
-      .custom-input-card {
-        width: 18rem;
-      }
-
-      .custom-input-card .btn:last-child {
-        margin-left: 1rem;
-      }
-
       .content-window-card {
         position: relative;
         width: 23rem;
@@ -64,22 +68,7 @@
 
       .amap-icon img,
       .amap-marker-content img {
-        width: 25px;
-        height: 34px;
-      }
-
-      .marker {
-        position: absolute;
-        top: -20px;
-        right: -118px;
-        color: #fff;
-        padding: 4px 10px;
-        box-shadow: 1px 1px 1px rgba(10, 10, 10, 0.2);
-        white-space: nowrap;
-        font-size: 12px;
-        font-family: "";
-        background-color: #25a5f7;
-        border-radius: 3px;
+        width: 15px;
       }
     </style>
   </head>
@@ -116,157 +105,6 @@
         city: "340000", //设为安徽，默认：“全国”
         radius: 1000, //范围，默认：500
       });
-
-      // 加载服务区
-      // fetch('./services.geojson').then((response) => {
-      //   return response.json()
-      // }).then((data) => {
-      //   console.log(data)
-      //   let geojson = new AMap.GeoJSON({
-      //     geoJSON: data,
-      //     getPolygon: function (json, lnglats) {
-      //       let polygon = new AMap.Polygon({
-      //         path: lnglats,
-      //         strokeColor: '#ffd666',
-      //         strokeWeight: 6,
-      //         strokeOpacity: 0.4,
-      //         fillOpacity: 0.4,
-      //         fillColor: '#95de64',
-      //         zIndex: 50,
-      //         extData: json.properties,
-      //       })
-      //       polygon.on('click', function (e) {
-      //         console.log('click', this.getExtData())
-      //         polygonClick(e, this.getExtData())
-      //       })
-      //       return polygon
-      //     },
-      //     getMarker: function (geojson, lnglats) {
-      //       return []
-      //     },
-      //   })
-      //   // 添加geojson图层
-      //   map.add(geojson)
-      // })
-
-      // for (let i = 0; i < highway_services.length; i++) {
-      //   console.log(highway_services[i].poiList.pois)
-      //   for (let j = 0; j < highway_services[i].poiList.pois.length; j++) {
-      //     let marker = new AMap.Marker({
-      //       position: highway_services[i].poiList.pois[j].location,
-      //       info: {
-      //         name: highway_services[i].poiList.pois[j].name,
-      //         address: highway_services[i].poiList.pois[j].address,
-      //       },
-      //     })
-      //     marker.on('click', function (e) {
-      //       markerClick(e, {
-      //         name: highway_services[i].poiList.pois[j].name,
-      //         address: highway_services[i].poiList.pois[j].address,
-      //       })
-      //     })
-      //     map.add(marker)
-      //   }
-      // }
-
-      // let list = [];
-      // let page_size = 25;
-      // for (let i = 0; i < 30; i++) {
-      //   let page_num = i + 1;
-      //   https: fetch(
-      //     `https://restapi.amap.com/v5/place/text?keywords=&types=180200|180201&region=340000&city_limit=true&page_size=${page_size}&page_num=${page_num}&key=d51db5f96545ea96c0ff839ab5002ebd`
-      //   )
-      //     .then((response) => {
-      //       return response.json();
-      //     })
-      //     .then((res) => {
-      //       console.log(res);
-      //       if (res.status == "1" && res.pois.length > 0) {
-      //         list.push(res);
-      //         console.log(list);
-      //       }
-      //     });
-      // }
-
-      // for (let i = 0; i < 20; i++) {
-      //   let MSearch = new AMap.PlaceSearch({
-      //     //设置PlaceSearch属性
-      //     city: "340000", //城市
-      //     citylimit: true,
-      //     // type: "180300", //数据类别
-      //     type: "180200|180201",
-      //     pageSize: 50, //每页结果数,默认10
-      //     pageIndex: i + 1, //请求页码，默认1
-      //     extensions: "base", //返回信息详略，默认为base（基本信息）
-      //   }); //构造PlaceSearch类
-      //   MSearch.search("", function (status, result) {
-      //     //查询成功时，result 即对应匹配的 POI 信息
-      //     if (status != "no_data" && status != "error") {
-      //       console.log(i + 1, status, result.poiList);
-      //       list.concat(result.poiList.pois);
-      //       console.log(list);
-      //     }
-      //   }); //关键字查询
-      // }
-
-      // for (let i = 0; i < toll_both.length; i++) {
-      //   let marker = new AMap.Marker({
-      //     position: toll_both[i].location.split(","),
-      //     icon: "//a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-red.png",
-      //     info: {
-      //       name: toll_both[i].name,
-      //       address: toll_both[i].address,
-      //     },
-      //   });
-      //   marker.on("click", function (e) {
-      //     markerClick(e, {
-      //       name: toll_both[i].name,
-      //       address: toll_both[i].address,
-      //     });
-      //   });
-      //   map.add(marker);
-      // }
-
-      // // 加载收费站
-      // fetch("./toll_booth.geojson")
-      //   .then((response) => {
-      //     return response.json();
-      //   })
-      //   .then((data) => {
-      //     console.log(data);
-      //     let geojson = new AMap.GeoJSON({
-      //       geoJSON: data,
-      //       getMarker: function (json, lnglats) {
-      //         let marker = new AMap.Marker({
-      //           position: lnglats,
-      //           info: {
-      //             name: json.properties.extraData.formattedAddress,
-      //             address:
-      //               json.properties.extraData.addressComponent.province +
-      //               json.properties.extraData.addressComponent.city +
-      //               json.properties.extraData.addressComponent.district +
-      //               json.properties.extraData.addressComponent.township,
-      //           },
-      //         });
-      //         marker.on("click", function (e) {
-      //           markerClick(e, {
-      //             name: json.properties.extraData.formattedAddress,
-      //             address:
-      //               json.properties.extraData.addressComponent.province +
-      //               json.properties.extraData.addressComponent.city +
-      //               json.properties.extraData.addressComponent.district +
-      //               json.properties.extraData.addressComponent.township,
-      //           });
-      //         });
-      //         return marker;
-      //       },
-      //       getPolygon: function () {
-      //         return [];
-      //       },
-      //     });
-      //     // 添加geojson图层
-      //     map.add(geojson);
-      //   });
 
       map.on("click", function (ev) {
         // 点击位置确定道路
@@ -324,7 +162,7 @@
                   map.add(polyline);
                 }
 
-                // 加载高速服务区
+                // 高速服务区
                 let geojson = new AMap.GeoJSON({
                   geoJSON: servicesJson,
                   getPolygon: function (json, lnglats) {
@@ -355,8 +193,43 @@
                     return [];
                   },
                 });
-                // 添加geojson图层
+                // 添加服务区geojson图层
                 map.add(geojson);
+
+                // 高速收费站
+                let tollBoothGeoJson = new AMap.GeoJSON({
+                  geoJSON: tollBoothJson,
+                  getMarker: function (json, lnglats) {
+                    if (json.properties.extraData.formattedAddress.includes(highwayName)) {
+                      let marker = new AMap.Marker({
+                        position: lnglats,
+                        icon: "./assets/toll_booth.png",
+                        info: {
+                          name: json.properties.extraData.formattedAddress,
+                          address:
+                            json.properties.extraData.addressComponent.province +
+                            json.properties.extraData.addressComponent.city +
+                            json.properties.extraData.addressComponent.district +
+                            json.properties.extraData.addressComponent.township,
+                        },
+                      });
+                      marker.on("click", function (e) {
+                        markerClick(e, {
+                          name: json.properties.extraData.formattedAddress,
+                          address:
+                            json.properties.extraData.addressComponent.province +
+                            json.properties.extraData.addressComponent.city +
+                            json.properties.extraData.addressComponent.district +
+                            json.properties.extraData.addressComponent.township,
+                        });
+                      });
+                      return marker;
+                    } else {
+                      return [];
+                    }
+                  },
+                });
+                map.add(tollBoothGeoJson);
               } else {
                 console.log("未找到匹配的高速编号");
               }
@@ -392,6 +265,16 @@
             data.extraData.addressComponent.township
           }</p></div></div>`
         );
+        infoWindow.setContent(info.join(""));
+        infoWindow.open(map, e.lnglat);
+      }
+
+      function polyLineClick(e, data) {
+        //构建信息窗体中显示的内容
+        let info = [];
+        info.push(`<div style="padding:7px 0px 0px 0px;"><h4>${data["bridge:name"]}</h4>`);
+        info.push("<hr />");
+        info.push(`<p class="input-item">地址 :${data.name}</p></div></div>`);
         infoWindow.setContent(info.join(""));
         infoWindow.open(map, e.lnglat);
       }
