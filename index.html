@@ -240,7 +240,7 @@
         });
       });
       // 信息窗体
-      let infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -40) });
+      let infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -20) });
 
       function markerClick(e, data) {
         //构建信息窗体中显示的内容
@@ -249,7 +249,7 @@
         info.push("<hr />");
         info.push(`<p class="input-item">地址 :${data.address}</p></div></div>`);
         infoWindow.setContent(info.join(""));
-        infoWindow.open(map, e.target.getPosition());
+        infoWindow.open(map, e.lnglat);
       }
 
       function polygonClick(e, data) {
